@@ -75,23 +75,44 @@ public class Main {
                 userDao.insertGroup(group);
             }
 
-            for (int i = 0; i < groups.size(); i++) {
-                for (int j = 0; j < students.size(); j++) {
-                    for (int k = 0; k < students.get(j).getGroups().size(); k++) {
-                        if (students.get(j).getGroups().get(k).getId() == groups.get(i).getId()) {
-                            userDao.insertGrpStd(groups.get(i).getId(), students.get(j).getId());
+            for (Group group : groups) {
+                for (Student student : students) {
+                    for (int k = 0; k < student.getGroups().size(); k++) {
+                        if (student.getGroups().get(k).getId() == group.getId()) {
+                            userDao.insertGrpStd(group.getId(), student.getId());
                         }
                     }
                 }
             }
 
 
+            String grpName = "Pyton";
+            List<Student> st = userDao.getGroupInfo(grpName);
+            System.out.print("\n" + grpName + " group members: ");
+            for (int i = 0; i < st.size(); i++) {
+                System.out.print(st.get(i).getName());
+                if (i < (st.size() - 1)) {
+                    System.out.print(", ");
+                }
+            }
+            System.out.println();
+
+
+            String stdName = "Den";
+            List<Group> gr = userDao.getStudentInfo(stdName);
+            System.out.print("\n" + stdName + "\'s groups: ");
+            for (int i = 0; i < gr.size(); i++) {
+                System.out.print(gr.get(i).getName());
+                if (i < (st.size() - 1)) {
+                    System.out.print(", ");
+                }
+            }
+            System.out.println();
 
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
 
     }
 

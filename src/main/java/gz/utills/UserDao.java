@@ -8,6 +8,8 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 public class UserDao {
 
@@ -27,7 +29,7 @@ public class UserDao {
         try (Statement statement = connection.createStatement()) {
             statement.execute("CREATE TABLE IF NOT EXISTS groups (\n" +
                     "gr_id SERIAL PRIMARY KEY,\n" +
-                    "name varchar(20),\n" +
+                    "gr_name varchar(20),\n" +
                     "start_date varchar(20)\n" +
                     ");");
         }
@@ -38,7 +40,7 @@ public class UserDao {
         try (Statement statement = connection.createStatement()) {
             statement.execute("CREATE TABLE IF NOT EXISTS students (\n" +
                     "st_id SERIAL PRIMARY KEY,\n" +
-                    "name varchar(20),\n" +
+                    "st_name varchar(20),\n" +
                     "age int\n" +
                     ");");
         }
@@ -77,10 +79,10 @@ public class UserDao {
     public void insertGroup(Group group) throws SQLException {
         try (Statement statement = connection.createStatement()) {
 
-            String request = String.format("INSERT INTO groups (name, start_date) VALUES ('%s', '%s');", group.getName(), group.getStartDate());
+            String request = String.format("INSERT INTO groups (gr_name, start_date) VALUES ('%s', '%s');", group.getName(), group.getStartDate());
             statement.execute(request);
 
-            request = String.format("SELECT gr_id FROM groups WHERE name = '%s';", group.getName());
+            request = String.format("SELECT gr_id FROM groups WHERE gr_name = '%s';", group.getName());
             ResultSet resultSet = statement.executeQuery(request);
             while (resultSet.next()) {
                 group.setId(resultSet.getInt("gr_id"));
@@ -93,10 +95,10 @@ public class UserDao {
     public void insertStudent(Student student) throws SQLException {
         try (Statement statement = connection.createStatement()) {
 
-            String request = String.format("INSERT INTO students (name, age) VALUES ('%s', '%d');", student.getName(), student.getAge());
+            String request = String.format("INSERT INTO students (st_name, age) VALUES ('%s', '%d');", student.getName(), student.getAge());
             statement.execute(request);
 
-            request = String.format("SELECT st_id FROM students WHERE name = '%s';", student.getName());
+            request = String.format("SELECT st_id FROM students WHERE st_name = '%s';", student.getName());
             ResultSet resultSet = statement.executeQuery(request);
             while (resultSet.next()) {
                 student.setId(resultSet.getInt("st_id"));
@@ -111,6 +113,43 @@ public class UserDao {
             String request = String.format("INSERT INTO grp_std VALUES ('%d', '%d');", gr_id, st_id);
             statement.execute(request);
         }
+    }
+
+
+    public List<Student> getGroupInfo(String groupName) throws SQLException {
+        List<Student> students = new ArrayList<>();
+        try (Statement statement = connection.createStatement()){
+            String request = String.format("SELECT * FROM \n" +
+                    "(groups JOIN grp_std USING (gr_id)) JOIN students USING (st_id) \n" +
+                    "WHERE groups.gr_name = '%s';", groupName);
+            ResultSet resultSet = statement.executeQuery(request);
+            while (resultSet.next()) {
+                String name = resultSet.getString("st_name");
+                int age = resultSet.getInt("age");
+                students.add(new Student(name, age));
+            }
+
+        }
+        return students;
+    }
+
+
+    public List<Group> getStudentInfo(String studentName) throws SQLException {
+        List<Group> groups = new ArrayList<>();
+        try (Statement statement = connection.createStatement()){
+            String request = String.format("SELECT * FROM \n" +
+                    "(groups JOIN grp_std USING (gr_id)) JOIN students USING (st_id) \n" +
+                    "WHERE students.st_name = '%s';", studentName);
+            ResultSet resultSet = statement.executeQuery(request);
+            while (resultSet.next()) {
+                String name = resultSet.getString("gr_name");
+                String startDate = resultSet.getString("start_date");
+                int age = resultSet.getInt("age");
+                groups.add(new Group(name, startDate));
+            }
+
+        }
+        return groups;
     }
 
 
